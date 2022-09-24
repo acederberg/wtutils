@@ -1,0 +1,304 @@
+# vi: set ft=yaml :
+
+actions :
+
+  # Render this document as json
+  Misc :
+    - command :
+        action : "sendInput"
+        input : "bash -c python3.10 ~/render_wtsettings"
+      keys : "ctrl+alt+shift+,"
+
+  # Clear Shortcuts.
+  # alt+x -- Clear the terminal.
+  # alt+shif+x -- Clear the terminal internal.
+  Clear :
+    - command : 
+        action : "sendInput"
+        input : "clear\r"
+      keys : "alt+x"
+
+    - command :
+        action : "sendInput"
+        input : "clear\r"
+      keys : "alt+shift+x"
+
+
+  Panes : 
+    - command:  
+        action: "moveFocus"
+        direction: "down"
+      keys: "alt+pageup"
+
+    - command:  
+        action: "moveFocus"
+        direction: "left"
+      keys: "alt+pagedown"
+        
+    - command:  
+        action: "moveFocus"
+        direction: "right"
+      keys: "alt+end"
+
+    - command:  
+        action: "moveFocus"
+        direction: "up" 
+      keys: "alt+home"
+
+
+  # Split Shortcuts.
+  # alt+p -- Slip powershell horizontal.
+  # alt+shift+p -- Split powershell vertically.
+  PowerShell :
+    - command :
+        action : "splitPane"
+        split : "vertical"
+        profile : "PowerShell"
+      keys : "alt+p"
+
+    - command :
+        action : "splitPane"
+        split : "horizontal"
+        profile : "PowerShell"
+      keys : "alt+shift+p"
+
+    - command :
+        action : "splitPane"
+        split : "horizontal"
+        profile : "Azure Cloud Shell"
+      keys : "alt+q"
+
+    - command :
+        action : "splitPane"
+        split : "vertical"
+        profile : "Azure Cloud Shell"
+      keys : "alt+shift+q"
+
+
+  # Shortcuts for 'vim' and 'zsh'.
+  #
+  # alt+a -- Edit '.zshrc'.
+  # alt+shift+a -- Source '.zshrc'. 
+  # alt+ctrl+a -- Edit '.vimrc'.  
+  Shell :
+    - command :
+        action : "sendInput"
+        input : "source ~/.zshrc\r"
+      keys : "alt+a"
+
+    - command : 
+        action : "sendInput"
+        input : "vim ~/.zshrc\rG11k"
+      keys : "alt+shift+a"
+
+    - command :
+        action : "sendInput"
+        input : "vim ~/.vimrc\r"
+      keys : "alt+ctrl+a"
+
+
+  # Shortcuts for 'git'.
+  #
+  # alt+g -- Git status.
+  # alt+h -- Git diff.
+  # alt+shift+g -- Git pull.
+  # alt+shift+h -- Git push.
+  # alt+ctrl+g -- Clip the most recent git commit hash.
+  # alt+ctl+h -- Clip the current git branch.
+  # alt+win+g -- Undefined.
+  # alt+win+h -- Undefined.
+  Git :
+    - command :
+        action : "sendInput"
+        input : "git status\r"
+      keys : "alt+g"
+
+    - command :
+        action : "sendInput"
+        input : "git diff\r"
+      keys : "alt+h"
+
+    - command :
+        action : "sendInput"
+        input : "git pull\r"
+      keys : "alt+ctrl+g"
+
+    - command :
+        action : "sendInput"
+        input : "git push\r"
+      keys : "alt+ctrl+h"
+
+    - command :
+        action : "sendInput"
+        input : "git log --max-count 1 | grep ^commit | sed 's/^commit *//' | clip.exe\r"
+      keys : "alt+shift+g"
+
+    - command :
+        action : "sendInput"
+        input : "git branch | grep '*' | sed 's/\\* *//' | clip.exe\r"
+      keys : "alt+shift+h"
+
+    - command :
+        action : "sendInput"
+        input : ""
+      keys : "alt+win+g"
+
+    - command :
+        action : "sendInput"
+        input : ""
+      keys : "alt+win+h"
+
+
+  # Shortcuts for docker and docker compose 
+  #
+  # alt+d -- Start docker containers and run them in the background.
+  # alt+shift+d -- Kill the current directories docker project.
+  # alt+ctrl+d -- List active docker containers.
+  # alt+ctrl+shift+d -- List all docker containers.
+  Docker :
+    - command :
+        action : "sendInput"
+        input : "docker compose up --detach --build\r"
+      keys : "alt+d"
+
+    - command :
+        action : "sendInput"
+        input : "docker compose down\r"
+      keys : "alt+shift+d"
+
+    - command :
+        action : "sendInput"
+        input : "docker ps\r"
+      keys : "alt+ctrl+d"
+
+    - command :
+        action : "sendInput"
+        input : "docker ps -a\r"
+      keys : "alt+ctrl+shift+d"
+
+
+  Brain :
+    - command :
+        action : "sendInput"
+        input : "docker exec -it brain_api bash\r"
+      keys : "alt+b"
+
+    - command :
+        action : "sendInput"
+        input : "docker exec -it brain_db bash\r"
+      keys : "alt+shift+b"
+    
+  # Shortcuts kubernetes.
+  #
+  # alt+
+  Kubernetes :
+  - command :
+      action : "sendInput"
+      input : "kubectl get pods"
+    keys : "alt+k"
+
+  - command :
+      action : "sendInput"
+      input : "pod=$(kubectl get pods | grep)"
+    keys : "alt+shift+k"
+
+  - command :
+      action : "sendInput"
+      input : "kubectl edit ingress"
+    keys : "alt+ctrl+k"
+
+  - command :
+      action : "sendInput"
+      input : ""
+    keys : "alt+ctrl+shift+k"
+
+
+  # Shortcuts for  helm
+  #
+  # alt+h --
+  # alt+shift+h --
+  # alt+ctrl+h --
+  # alt+ctrl+shift+h --
+  Helm : 
+    - command :
+        action : "sendInput"
+        input : "helm list -A"
+      keys : "alt+h"
+
+    - command :
+        action : "sendInput"
+        input : ""
+      keys : "alt+shift+h"
+
+    - command :
+        action : "sendInput"
+        input : ""
+      keys : "alt+ctrl+h"
+
+    - command :
+        action : "sendInput"
+        input : ""
+      keys : "alt+ctrl+shift+h"
+
+
+  # Shortcuts for mysql
+  #
+  # alt+m -- Use window's mysql instance.
+  # alt+shift+m -- Use the brain_api projects's mysql docker container.
+  # alt+ctrl+m -- Clip the production database password.
+  # alt+ctrl+shift+m -- Clip the production database password and use
+  #   the production database password.
+  MySQL :
+    - command :
+        action : "sendInput"
+        input : "mysql.exe --host localhost --port 3306 --database mve_brain_sqlalchemy_final --username root --password\r"
+      keys : "alt+m"
+
+    - command :
+        action : "sendInput"
+        input : "docker exec -it brain_db mysql -u adrian -p\r"
+      keys : "alt+shift+m"
+
+    - command :
+        action : "sendInput"
+        input : "grep  mysql_administrator_login_password  /mnt/c/MVE/ansible/terraform/terraform.tfvars | sed 's/mysql_administrator_login_password//' | sed 's/ = //' | sed 's/\"//g' | clip.exe\r"
+      keys : "alt+ctrl+m"
+
+    - command :
+        action : "sendInput"
+        input : "mysql.exe --ssl-ca BaltimoreCyberTrustRoot.crt.pem --user=MQ2cHjWcOLO23ivy@testappmysql -p --host=testappmysql.mysql.database.azure.com\r"
+      keys : "alt+ctrl+shift+m"
+
+
+  # Terminal opacity
+  #
+  # alt+o -- Decrease opacity subtly.
+  # alt+t -- Increase opacity subtly.
+  # alt+shift+o -- Decrease opacity.
+  # alt+shift+t -- Increase opacity.
+  TermOpacity :
+    - command :
+        action : "adjustOpacity"
+        relative : true
+        opacity : -2
+      keys : "alt+t"
+
+    - command :
+        action : "adjustOpacity"
+        relative : true
+        opacity : 3
+      keys : "alt+o"
+
+    - command :
+        action : "adjustOpacity"
+        relative : true
+        opacity : -5
+      keys : "alt+shift+t"
+
+    - command :
+        action : "adjustOpacity"
+        relative : true
+        opacity : 8
+      keys : "alt+shift+o"
+
+

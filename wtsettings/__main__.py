@@ -47,7 +47,7 @@ class WTSettingsYAMLSchema(BaseModel):
         cls, config: Optional[Config] = None, confattr: Optional[str] = None
     ) -> "WTSettingsYAMLSchema":
 
-        config = config or Config()
+        config = config if config is not None else Config()
 
         filepath: str
         if confattr is None:
@@ -81,6 +81,7 @@ class Main:
     )
     __options__ = (
         "Print a set of keybindings as JSON.",
+        "Print all keybindings as JSON.",
         "Rerender wt settings from the given actions.",
         "Print a profile as json.",
     )
@@ -94,6 +95,26 @@ class Main:
         return any(regexp.match(ans) is not None for regexp in cls.__yes__)
 
     @classmethod
+    def input_int(cls, n) -> int:
+        """"""
+
+        input_: int
+        try:
+            input_ = int(input())
+        except:
+            print("That's not an integer. Try again:", end=" ")
+            return -1
+
+        if not (0 <= input_ <= n):
+            print(
+                f"That's not a valid input. Should be positive and less than {n+1}. Try again:",
+                end=" ",
+            )
+            return -1
+
+        return input_
+
+    @classmethod
     def _input_enumerated(cls, n: int, options_: Dict[int, str]) -> str:
         """Helper for :meth:``input_enumerated``.
 
@@ -103,18 +124,8 @@ class Main:
         :returns: The interger input.
         """
 
-        input_: int
-        try:
-            input_ = int(input())
-        except:
-            print("That's not an integer. Try again:", end=" ")
-            return -1, ""
-
-        if not (0 <= input_ < n):
-            print("That's not a valid input. Try again:", end=" ")
-            return -1, ""
-
-        return input_, options_[input_]
+        input_ = cls.input_int(n)
+        return input_, options_[input_] if input_ > -1 else ""
 
     @classmethod
     def input_enumerated(cls, prompt: str, options: Tuple[str, ...]) -> str:
@@ -127,6 +138,7 @@ class Main:
 
         # Verification and prompt.
         n = len(options)
+        print(len(options))
         assert n > 0, "Insufficient options parameter. Iterable must not be falsy."
 
         options_: Dict[int, str] = {
@@ -152,7 +164,9 @@ class Main:
         return ans
 
     @classmethod
-    def handle_subsection(cls, wtsettings: WTSettingsYAMLSchema) -> None:
+    def handle_subsection(
+        cls, wtsettings: WTSettingsYAMLSchema, render_all: bool = False
+    ) -> None:
         """Handle calling a subsection. This should represent the call signature for
         first level handler.
 
@@ -160,18 +174,39 @@ class Main:
         :returns: None.
         """
 
-        subsection: str
-        _, subsection = cls.input_enumerated(
+        termsize = shutil.get_terminal_size()
+        delim = termsize.columns * "="
+
+        print("\nInput the level of indent you want: ", end="")
+        indent = cls.input_int(2) or None
+
+        # Print everything altogether and exit.
+        if render_all:
+            print(delim)
+            print(
+                json.dumps(
+                    tuple(
+                        item.dict()
+                        for subsection in wtsettings.actions.values()
+                        for item in subsection
+                    ),
+                    indent=indent,
+                )
+            )
+            print(delim)
+            sys.exit(0)
+
+        # Print some subsection in particular.
+        subsection_name: str
+        _, subsection_name = cls.input_enumerated(
             "Choose a subsection to use: ", wtsettings.actions
         )
-        size = shutil.get_terminal_size()
-        delim = size.columns * "="
 
-        # Printing
         print(delim)
         print(
             json.dumps(
-                tuple(item.dict() for item in wtsettings.actions[subsection]), indent=2
+                tuple(item.dict() for item in wtsettings.actions[subsection_name]),
+                indent=indent,
             )
         )
         print(delim)
@@ -181,6 +216,8 @@ class Main:
 
     def handle_rerender_actions(cls, wtsettings: WTSettingsYAMLSchema) -> None:
         """ """
+
+        print("Incomplete.")
 
         sys.exit(0)
 
@@ -198,6 +235,8 @@ class Main:
         match option_index:
             case 0:
                 cls.handle_subsection(wtsettings)
+            case 1:
+                cls.handle_subsection(wtsettings, render_all=True)
             case _:
                 print("Undefined option.")
 
