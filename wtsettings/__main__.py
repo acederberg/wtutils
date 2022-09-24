@@ -24,7 +24,7 @@ from pydantic import BaseModel, BaseSettings
 class Config(BaseSettings):
     """Settings for interactive mode."""
 
-    YAMLConfig: str = path.join(path.dirname(__file__), ".wtsettings")
+    YAMLConfig: str = path.join(path.dirname(__file__), "settings.yaml")
     JSONConfig: str = "/mnt/c/Users/AdrianCederberg/AppData/Local/Packages/Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe/LocalState"
 
 
