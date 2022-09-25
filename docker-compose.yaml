@@ -1,0 +1,10 @@
+services :
+  wt_apps :
+    build :
+      context :       "."
+      dockerfile :    "Dockerfile"
+    container_name :  "wt_utils"
+    tty :             true
+    volumes :
+      - "./:/home/dev/app"
+
