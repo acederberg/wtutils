@@ -222,7 +222,7 @@ class Main:
         sys.exit(0)
 
     @classmethod
-    def main(cls, config: Optional[Config] = None):
+    def invoke(cls, config: Optional[Config] = None):
 
         # Present options to the user. Ignore option value and maintain the option index.
         option_index: int
@@ -239,6 +239,10 @@ class Main:
                 cls.handle_subsection(wtsettings, render_all=True)
             case _:
                 print("Undefined option.")
+
+
+def main():
+    return Main.invoke()
 
 
 if __name__ == "__main__":
