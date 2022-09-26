@@ -28,9 +28,9 @@ services :
     <<: *networks_common
     container_name :      "wt_db"
     environment :
-      MYSQL_DATABASE :    "wt_utils"
+      MYSQL_DATABASE :    "wt_settings_tests"
       MYSQL_USER :        "adrian"
-      MYSQL_PASSWORD :    "neverusethispasswordinproduction"
+      MYSQL_PASSWORD :    "somepassword"
       MYSQL_ROOT_USER :   "root"
       MYSQL_RANDOM_ROOT_PASSWORD : true
     image : mysql

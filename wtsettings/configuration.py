@@ -1,6 +1,17 @@
-from typing import Optional
+from os import path
+from typing import Dict, Optional
 
 from pydantic import BaseModel, BaseSettings
+from pydantic.env_settings import SettingsSourceCallable
+from yaml import safe_load
+
+ENV_FILE = path.realpath(path.join(path.dirname(__file__), "..", ".env.yaml"))
+
+
+def yaml_settings(settings: SettingsSourceCallable) -> Dict:
+
+    with open(ENV_FILE, "r") as file:
+        return safe_load(file)
 
 
 class ApiConfiguration(BaseSettings):
@@ -8,6 +19,17 @@ class ApiConfiguration(BaseSettings):
 
     :attr mysql: Setting for mysql.
     """
+
+    class Config:
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+
+            return yaml_settings, file_secret_settings
 
     class MySqlConfiguration(BaseModel):
         """Settings for the MySQL database connection.
@@ -34,6 +56,7 @@ class ApiConfiguration(BaseSettings):
             port: Optional[int]
             username: str
             password: str
+            database: str
 
         drivername: str
         url: MySqlUrlConfiguration
