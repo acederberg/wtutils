@@ -1,10 +1,56 @@
+version : "3.7"
+
+
+networks : &networks_common
+  networks :
+    backend : {}
+    api : {}
+
+
 services :
   wt_apps :
+    <<: *networks_common
     build :
       context :       "."
       dockerfile :    "Dockerfile"
     container_name :  "wt_utils"
+    depends_on :
+      - wt_db
+    expose :
+      - 8000
+    ports :
+      - "8000:8000"
     tty :             true
     volumes :
       - "./:/home/dev/app"
+
+  wt_db :
+    <<: *networks_common
+    container_name :      "wt_db"
+    environment :
+      MYSQL_DATABASE :    "wt_utils"
+      MYSQL_USER :        "adrian"
+      MYSQL_PASSWORD :    "neverusethispasswordinproduction"
+      MYSQL_ROOT_USER :   "root"
+      MYSQL_RANDOM_ROOT_PASSWORD : true
+    image : mysql
+    volumes :
+      - "data:/var/lib/mysql"
+    ports :
+      - "3307:3306"
+
+
+volumes :
+  data :
+
+
+networks :
+
+  backend :
+    name : "mve-brain-backend"
+    driver : "bridge"
+
+  api :
+    name : "mve-brain-api"
+    driver : "bridge"
 
