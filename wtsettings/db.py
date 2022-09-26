@@ -1,13 +1,21 @@
-from datetime import date
+import abc
+import logging
+import secrets
+from datetime import date, datetime
+from functools import wraps
 from secrets import token_urlsafe
 from sys import exit
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.engine import URL, Engine, create_engine
 from sqlalchemy.engine.result import ChunkedIteratorResult, Result
+from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
+from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import registry, sessionmaker
+from sqlalchemy.orm.decl_api import declarative_base
 from sqlalchemy.sql.schema import Column, ForeignKey
+from typing_extensions import Self
 
 from .configuration import ApiConfiguration
 
@@ -24,9 +32,8 @@ class Database:
     Registry = registry()
     Base = Registry.generate_base()
 
-    def __init__(self, logger, configuration: Optional[ApiConfiguration] = None):
+    def __init__(self, configuration: Optional[ApiConfiguration] = None):
 
-        self.logger = logger
         self.configuration: ApiConfiguration = (
             configuration if configuration is not None else ApiConfiguration()
         )
@@ -37,7 +44,7 @@ class Database:
         """Instantiate orm registry tables."""
 
         with self.engine.connect() as connection:
-            self.logger.info(
+            logging.info(
                 f"Creating database tables for {self.configuration.url.hostname}."
             )
             connection.create_tables(self.Base.metadata)
@@ -53,14 +60,14 @@ class Database:
                     f'{msg.replace("ing", "", count = 1)}? This will delete ALL tables and not just those made by the ORM. Enter `YES` to proceed.'
                 )
                 if yes != "YES":
-                    self.logger.info("User did not consent to dropping tables.")
+                    logging.info("User did not consent to dropping tables.")
                     exit(1)
                 else:
-                    self.logger.info("User consented to dropping tables.")
+                    logging.info("User consented to dropping tables.")
             else:
-                self.logger.info("User consent bypassed.")
+                logging.info("User consent bypassed.")
 
-            self.logger.info(msg)
+            logging.info(msg)
             connection.execute(
                 text(f"DROP DATABASE {self.confguration.mysql.url.database};")
             )
@@ -86,13 +93,103 @@ class Database:
 
         return tuple(self.exec_(stmt).scalars())
 
-    def serial(self, stmt, serializer: Callable[Any, Dict]) -> Tuple[Dict]:
+    def serial(self, stmt, serializer: Callable[[Any], Dict]) -> Tuple[Dict]:
 
         return tuple(serializer(item) for item in self.exec_(stmt).scalars())
 
 
 class Objects:
-    class User(Database.Base):
+    class Base(
+        declarative_base(
+            metaclass=type(
+                "DeclarativeABCMeta",
+                (
+                    DeclarativeMeta,
+                    abc.ABCMeta,
+                ),
+                {},
+            ),
+        )
+    ):
+        """A tool for generating dummy data. This is helpful for tests.
+
+        :meth with_fields: A decorator to aid in genating values for the various fields.
+        :meth create_dummies: An abstract method for dummy generation.
+        """
+
+        __abstract__ = True
+
+        @classmethod
+        def create_dummy_field_function(cls, column: Column) -> Callable[[], Any]:
+            def split(column: Column) -> Union[str, List[str]]:
+                field = str(column).split("(")
+                return (
+                    field[0]
+                    if len(field) == 1
+                    else (
+                        field[0],
+                        field[1].replace(")", ""),
+                    )
+                )
+
+            matchable = split(column.type)
+            logging.info(f"Matching column `{column}` with deconstruction {matchable}.")
+
+            match matchable:
+                case "DATETIME" | "DATE":
+                    return lambda: datetime.fromtimestamp(
+                        2 * datetime.timestamp(datetime.now())
+                    )
+                case "INTEGER":
+                    return lambda: random.randint()
+                case ["VARCHAR", length]:
+                    return lambda: token_urlsafe(length // 2)
+                case _:
+                    logging.fatal(f"Undefined dummy field {column}.")
+                    raise Exception(f"Undefined dummy field {column}.")
+
+        @classmethod
+        def create_dummy_fields(cls) -> Dict[str, Callable[[], Any]]:
+
+            raw_fields = inspect(cls).attrs
+
+            return {
+                column_name: cls.create_dummy_field_function(
+                    column.columns[0]
+                )  # cls.__dummy_methods__[]
+                for column_name, column in raw_fields.items()
+            }
+
+        @classmethod
+        def with_fields(
+            cls, overrider: Dict[str, Callable[[], Any]]
+        ) -> Callable[[Callable], Callable]:
+            """Decorate a ``create_dummies`` method by prodiving it with a function to generate
+            each of the various fields.
+            """
+
+            def wrapper_wrapper(
+                func: Callable[[Dict], List[Self]]
+            ) -> Callable[[], List[Self]]:
+
+                fields = cls.create_dummy_fields()
+                fields.update(overrider)
+
+                @wraps
+                def wrapper():
+
+                    return func(fields)
+
+                return wrapper
+
+            return wrapper_wrapper
+
+        @abc.abstractclassmethod
+        def create_create_dummies(cls) -> List[Self]:
+
+            ...
+
+    class User(Base):
         """Description of an application user.  THIS TABLE WILL NOT CONTAIN AUTHENTICATION
         INFORMATION!!! Authentication will be handled by auth0.
 
@@ -113,7 +210,17 @@ class Objects:
         userCreated = Column(DateTime, default=date.today)
         userDetails = Column(String(32), nullable=True)
 
-    class Permission(Database.Base):
+        @classmethod
+        def create_create_dummies(
+            cls, overriders: Dict[str, Callable[[], Any]] = {}
+        ) -> Callable[[], Tuple[Self]]:
+            @cls.with_fields(overriders)
+            def create_dummies(fields: Dict[str, Callable[[], Any]], length: int):
+                return tuple(cls(**cls.fields(fields)) for _ in range(length))
+
+            return create_dummies
+
+    class Permission(Base):
         """Table to facilitate permisisons on collections.
 
         :attr idPermissions: Primary key.
@@ -136,3 +243,9 @@ class Objects:
         userIssuedToCanWrite = Column(Boolean)
         userIssuedToCanRead = Column(Boolean)
         userIssuedToIsAdmin = Column(Boolean)
+        permissionCreated = Column(DateTime, default=date.today)
+        permissionLastUpdated = Column(DateTime, default=date.today)
+
+
+if __name__ == "__main__":
+    print(Objects.User.create_create_dummies())
