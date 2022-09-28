@@ -21,6 +21,9 @@ class ApiConfiguration(BaseSettings):
     """
 
     class Config:
+        env_prefix = "WTSETTINGS_"
+        env_nested_delimiter = "__"
+
         @classmethod
         def customise_sources(
             cls,
@@ -29,7 +32,7 @@ class ApiConfiguration(BaseSettings):
             file_secret_settings: SettingsSourceCallable,
         ) -> tuple[SettingsSourceCallable, ...]:
 
-            return yaml_settings, file_secret_settings
+            return env_settings, init_settings, yaml_settings
 
     class MySqlConfiguration(BaseModel):
         """Settings for the MySQL database connection.
@@ -61,6 +64,23 @@ class ApiConfiguration(BaseSettings):
         drivername: str
         url: MySqlUrlConfiguration
         use_ssl: bool = False
+        echo: bool = False
         ssl_ca: Optional[str]
 
     mysql: MySqlConfiguration
+
+
+def main():
+
+    from json import dumps
+    from shutil import get_terminal_size
+
+    sep = get_terminal_size().columns * "="
+
+    print(sep)
+    print(dumps(ApiConfiguration().dict(), indent=2))
+    print(sep)
+
+
+if __name__ == "__main__":
+    main()

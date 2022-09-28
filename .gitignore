@@ -1,2 +1,5 @@
 wtutils.egg-info
+.env.*
+*.swo.*
+*.swp.*
 __pycache__
